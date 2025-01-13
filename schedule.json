@@ -1,0 +1,12 @@
+{
+    "Monday": {
+        "wake_up_time": "07:30",
+        "stretch_start_time": "07:45",
+        "stretch_end_time": "08:00",
+        "work_start_time": "08:30",
+        "work_end_time": "15:00",
+        "move_notification_interval": "30",
+        "moving_time": "3",
+        "break_time": "5"
+    }
+}
