@@ -1,0 +1,12 @@
+{
+    "Monday": {
+        "wake_up_time": "High",
+        "stretch_start_time": "High",
+        "stretch_end_time": "High",
+        "work_start_time": "High",
+        "work_end_time": "High",
+        "move_notification_interval": "High",
+        "moving_time": "High",
+        "break_time": "High"
+    }
+}
