@@ -8,5 +8,15 @@
         "move_notification_interval": "High",
         "moving_time": "High",
         "break_time": "High"
+    },
+    "Tuesday": {
+        "wake_up_time": "Medium",
+        "stretch_start_time": "Low",
+        "stretch_end_time": "Medium",
+        "work_start_time": "Low",
+        "work_end_time": "High",
+        "move_notification_interval": "High",
+        "moving_time": "Low",
+        "break_time": "Medium"
     }
 }
