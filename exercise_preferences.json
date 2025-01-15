@@ -1,0 +1,11 @@
+{
+    "intensity": "light",
+    "location": "indoor",
+    "goal": "fit",
+    "time": {
+        "hours": "23",
+        "minutes": "59",
+        "seconds": "59"
+    },
+    "recommendation": "Consider Pilates or low-intensity resistance training."
+}
