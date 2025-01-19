@@ -1,13 +1,13 @@
 {
     "Monday": {
-        "wake_up_time": "07:30",
-        "stretch_start_time": "07:45",
-        "stretch_end_time": "08:00",
-        "work_start_time": "08:30",
-        "work_end_time": "15:00",
-        "move_notification_interval": "30",
-        "moving_time": "3",
-        "break_time": "5"
+        "wake_up_time": "06:30",
+        "stretch_start_time": "07:10",
+        "stretch_end_time": "07:20",
+        "work_start_time": "08:00",
+        "work_end_time": "16:00",
+        "move_notification_interval": "24",
+        "moving_time": "2",
+        "break_time": "4"
     },
     "Tuesday": {
         "wake_up_time": "07:30",

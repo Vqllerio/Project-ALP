@@ -1,22 +1,6 @@
-import json
 import tkinter as tk
 from tkinter import simpledialog, messagebox
-from tkinter import ttk
-
-SCHEDULE_FILE = "schedule.json"
-
-def load_schedule():
-    """Load the schedule from a JSON file."""
-    try:
-        with open(SCHEDULE_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
-def save_schedule(schedule):
-    """Save the schedule to a JSON file."""
-    with open(SCHEDULE_FILE, "w") as file:
-        json.dump(schedule, file, indent=4)
+from Schedule_utils import load_schedule, save_schedule
 
 def is_valid_time_input(value):
     """Validate if the input is a valid time format (HH:MM)."""
@@ -93,44 +77,11 @@ def input_schedule():
         else:
             messagebox.showwarning("Invalid Choice", "Please select a valid option.")
 
-def view_schedule():
-    """Display the current weekly schedule."""
-    schedule = load_schedule()
-    if not schedule:
-        messagebox.showinfo("No Schedule", "No schedule found. Please set your schedule first.")
-        return
-
-    display_text = "Your Weekly Schedule:\n"
-    for day, day_schedule in schedule.items():
-        if isinstance(day_schedule, dict):
-            display_text += f"\n{day}:\n"
-            for key, value in day_schedule.items():
-                display_text += f"  {key.replace('_', ' ').capitalize()}: {value}\n"
-        else:
-            display_text += f"\n{day}: Invalid schedule format.\n"
-
-    messagebox.showinfo("Weekly Schedule", display_text)
-
 def main():
-    """Main function to manage the schedule."""
+    """Main function to edit the schedule."""
     root = tk.Tk()
     root.withdraw()  # Hide the root window
-
-    while True:
-        choice = simpledialog.askstring(
-            "Weekly Schedule Manager",
-            "Choose an option:\n1. View Weekly Schedule\n2. Set Weekly Schedule\n3. Exit"
-        )
-
-        if choice == "1":
-            view_schedule()
-        elif choice == "2":
-            input_schedule()
-        elif choice == "3":
-            messagebox.showinfo("Goodbye", "Goodbye!")
-            break
-        else:
-            messagebox.showwarning("Invalid Choice", "Please select a valid option.")
+    input_schedule()
 
 if __name__ == "__main__":
     main()

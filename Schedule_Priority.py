@@ -1,6 +1,6 @@
 import json
 import tkinter as tk
-from Schedule import view_schedule
+from View_Schedule import view_schedule
 from tkinter import simpledialog, messagebox
 
 SCHEDULE_FILE = "schedule.json"
