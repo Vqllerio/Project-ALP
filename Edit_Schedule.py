@@ -12,6 +12,12 @@ def is_valid_time_input(value):
         pass
     return False
 
+def compare_times(t1, t2):
+    """Compare two time strings in HH:MM format."""
+    h1, m1 = map(int, t1.split(":"))
+    h2, m2 = map(int, t2.split(":"))
+    return (h1 * 60 + m1) <= (h2 * 60 + m2)  # Returns True if t1 is less than or equal to t2
+
 def input_schedule_for_day(day):
     """Collect schedule inputs for a specific day."""
     schedule = {}
@@ -23,13 +29,22 @@ def input_schedule_for_day(day):
         ("Work end time (e.g., 12:00)", "work_end_time"),
     ]
 
+    last_time = None  # Track the last valid time
+
     for prompt, key in fields:
         while True:
             value = simpledialog.askstring("Input", f"{day}: {prompt}")
             if value is None:  # User canceled
                 return None
             if is_valid_time_input(value):
+                if last_time and not compare_times(last_time, value):
+                    messagebox.showerror(
+                        "Invalid Time Order",
+                        f"The time for {key.replace('_', ' ')} must be later than {last_time}."
+                    )
+                    continue
                 schedule[key] = value
+                last_time = value  # Update the last valid time
                 break
             else:
                 messagebox.showerror("Invalid Input", "Please enter a valid time in HH:MM format.")

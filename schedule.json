@@ -1,32 +1,22 @@
 {
     "Monday": {
-        "wake_up_time": "06:30",
+        "wake_up_time": "07:00",
         "stretch_start_time": "07:10",
         "stretch_end_time": "07:20",
         "work_start_time": "08:00",
-        "work_end_time": "16:00",
-        "move_notification_interval": "24",
-        "moving_time": "2",
-        "break_time": "4"
+        "work_end_time": "14:00",
+        "move_notification_interval": "20",
+        "moving_time": "4",
+        "break_time": "5"
     },
     "Tuesday": {
-        "wake_up_time": "07:30",
-        "stretch_start_time": "07:40",
-        "stretch_end_time": "07:45",
+        "wake_up_time": "07:45",
+        "stretch_start_time": "08:00",
+        "stretch_end_time": "08:10",
         "work_start_time": "09:00",
-        "work_end_time": "16:00",
-        "move_notification_interval": "10",
-        "moving_time": "5",
-        "break_time": "3"
-    },
-    "Wednesday": {
-        "wake_up_time": "07:00",
-        "stretch_start_time": "07:15",
-        "stretch_end_time": "07:20",
-        "work_start_time": "08:00",
-        "work_end_time": "07:00",
-        "move_notification_interval": "4",
-        "moving_time": "5",
-        "break_time": "3"
+        "work_end_time": "15:00",
+        "move_notification_interval": "2",
+        "moving_time": "3",
+        "break_time": "4"
     }
 }

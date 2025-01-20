@@ -6,23 +6,26 @@ from tkinter import simpledialog, messagebox
 SCHEDULE_FILE = "schedule.json"
 PRIORITY_FILE = "priority_schedule.json"
 
+
 def load_schedule():
     """Load the schedule from a JSON file."""
     try:
         with open(SCHEDULE_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
+            data = file.read().strip()
+            return json.loads(data) if data else {}  # Handle empty file
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}  # Return an empty dictionary if file not found or invalid
+
 
 
 def load_priority_schedule():
     """Load the priority schedule from a JSON file."""
     try:
         with open(PRIORITY_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
+            data = file.read().strip()
+            return json.loads(data) if data else {}  # Handle empty file
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}  # Return an empty dictionary if file not found or invalid
 
 def save_priority_schedule(priority_schedule):
     """Save the priority schedule to a JSON file."""
@@ -43,19 +46,32 @@ def input_priority_for_day(day):
     day_priority = priority_schedule.get(day, {})
 
     for task, _ in day_schedule.items():
+        # Debugging: Print the task to check its type
+        print(f"Task: {task} (type: {type(task)})")
+
+        # Ensure task is a string (hashable) and not a dictionary
+        if not isinstance(task, str):
+            messagebox.showerror("Invalid Task", f"Task '{task}' is not a valid string. It is a {type(task)}.")
+            continue
+
+        # Check if the task already has a high priority
+        if day_priority.get(task) == "High":
+            messagebox.showinfo("High Priority", f"'{task}' is already set to High priority and cannot be changed.")
+            continue
+
         while True:
             priority = simpledialog.askstring(
-                "Input", f"Set priority for '{task}' on {day} (1:High, 2:Medium, 3:Low):"
+                "Input", f"Set priority for '{task}' on {day} (1: High, 2: Low):"
             )
             if priority is None:
                 return  # User canceled
 
-            if priority in ["1", "2", "3"]:
-                priority_map = {"1": "High", "2": "Medium", "3": "Low"}
+            if priority in ["1", "2"]:
+                priority_map = {"1": "High", "2": "Low"}
                 day_priority[task] = priority_map[priority]
                 break
             else:
-                messagebox.showerror("Invalid Input", "Priority must be 1 (High), 2 (Medium), or 3 (Low).")
+                messagebox.showerror("Invalid Input", "Priority must be 1 (High) or 2 (Low).")
 
     priority_schedule[day] = day_priority
     save_priority_schedule(priority_schedule)
@@ -107,13 +123,26 @@ def view_priority_schedule():
     for day, tasks in priority_schedule.items():
         tk.Label(scrollable_frame, text=day, font=("Arial", 12, "bold"), pady=5).pack(anchor="w")
         for task, priority in tasks.items():
-            color_map = {"High": "red", "Medium": "orange", "Low": "green"}
-            tk.Label(
-                scrollable_frame,
-                text=f"Task: {task}, Priority: {priority}",
-                font=("Arial", 10),
-                fg=color_map.get(priority, "black")
-            ).pack(anchor="w", padx=20)
+            # Debugging: Print priority to see if it's a dictionary
+            print(f"Task: {task}, Priority: {priority} (type: {type(priority)})")
+
+            # Ensure priority is a string (either "High" or "Low")
+            if isinstance(priority, str):
+                color_map = {"High": "red", "Low": "green"}
+                tk.Label(
+                    scrollable_frame,
+                    text=f"Task: {task}, Priority: {priority}",
+                    font=("Arial", 10),
+                    fg=color_map.get(priority, "black")
+                ).pack(anchor="w", padx=20)
+            else:
+                print(f"Warning: Invalid priority type for task '{task}'")
+                tk.Label(
+                    scrollable_frame,
+                    text=f"Task: {task}, Priority: Invalid",
+                    font=("Arial", 10),
+                    fg="black"
+                ).pack(anchor="w", padx=20)
 
     # Bind mousewheel scrolling
     def on_mousewheel(event):
@@ -122,7 +151,6 @@ def view_priority_schedule():
     canvas.bind_all("<MouseWheel>", on_mousewheel)  # For Windows and macOS
     canvas.bind_all("<Button-4>", lambda event: canvas.yview_scroll(-1, "units"))  # For Linux scroll up
     canvas.bind_all("<Button-5>", lambda event: canvas.yview_scroll(1, "units"))  # For Linux scroll down
-
 
 
 def input_priority_schedule():
@@ -173,6 +201,6 @@ def main():
         else:
             messagebox.showwarning("Invalid Choice", "Please select a valid option.")
 
+
 if __name__ == "__main__":
     main()
-    
