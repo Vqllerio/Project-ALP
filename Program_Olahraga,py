@@ -7,123 +7,125 @@ SCHEDULE_FILE = "schedule.json"
 RECOMMENDED_SCHEDULE_FILE = "recommended_schedule.json"
 PRIORITY_FILE = "priority_schedule.json"
 
-
 def load_schedule():
     """Load the manual schedule from the JSON file."""
     try:
         with open(SCHEDULE_FILE, "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        messagebox.showerror("Error", f"{SCHEDULE_FILE} not found. Please create a schedule first.")
         return {}
 
-
 def load_recommended_schedule():
-    """Load the generated recommended schedule from the JSON file."""
+    """Load the recommended schedule from the JSON file."""
     try:
         with open(RECOMMENDED_SCHEDULE_FILE, "r") as file:
             return json.load(file)
     except FileNotFoundError:
         return {}
 
-
 def load_priority_schedule():
-    """Load the priority schedule from a JSON file."""
+    """Load the priority schedule from the JSON file."""
     try:
         with open(PRIORITY_FILE, "r") as file:
-            data = file.read().strip()
-            return json.loads(data) if data else {}  # Handle empty file
+            return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}  # Return an empty dictionary if file not found or invalid
+        return {}
 
-
-def save_recommended_schedule(schedule, day):
-    """Save the recommended schedule for a specific day to the JSON file."""
-    all_schedules = load_recommended_schedule()
-    all_schedules[day] = schedule  # Add or update the schedule for the day
+def save_recommended_schedule(schedule):
+    """Save the updated recommended schedule to the JSON file."""
     with open(RECOMMENDED_SCHEDULE_FILE, "w") as file:
-        json.dump(all_schedules, file, indent=4)
-
+        json.dump(schedule, file, indent=4)
 
 def save_priority_schedule(priority_schedule):
-    """Save the priority schedule to the JSON file."""
+    """Save the updated priority schedule to the JSON file."""
     with open(PRIORITY_FILE, "w") as file:
         json.dump(priority_schedule, file, indent=4)
-
 
 def parse_time(input_time):
     """Convert a time string (HH:MM) to a datetime object."""
     return datetime.datetime.strptime(input_time, "%H:%M")
 
-
 def format_time(time_obj):
     """Format a datetime object to a time string (HH:MM)."""
     return time_obj.strftime("%H:%M")
 
-
-def set_reminder(current_time, reminder_interval_minutes):
-    """Set a reminder after a certain interval during work time."""
-    reminder_time = current_time + datetime.timedelta(minutes=reminder_interval_minutes)
-    return reminder_time
-
-
 def generate_recommended_schedule(wake_up, work_start, work_end):
     """Generate a recommended schedule based on wake-up, work start, and work end times."""
-    try:
-        wake_up_time = parse_time(wake_up)
-        work_start_time = parse_time(work_start)
-        work_end_time = parse_time(work_end)
+    wake_up_time = parse_time(wake_up)
+    work_start_time = parse_time(work_start)
+    work_end_time = parse_time(work_end)
 
-        if not (wake_up_time < work_start_time < work_end_time):
-            raise ValueError("Ensure wake-up time < work start time < work end time.")
+    if not (wake_up_time < work_start_time < work_end_time):
+        raise ValueError("Ensure wake-up time < work start time < work end time.")
 
-        schedule = {}
-        schedule["wake_up_time"] = format_time(wake_up_time)
-        schedule["morning_routine"] = format_time(wake_up_time + datetime.timedelta(minutes=30))
+    schedule = {}
+    schedule["wake_up_time"] = format_time(wake_up_time)
+    schedule["morning_routine"] = format_time(wake_up_time + datetime.timedelta(minutes=30))
 
-        stretch_start = wake_up_time + datetime.timedelta(minutes=30)
-        schedule["stretch_start_time"] = format_time(stretch_start)
-        schedule["stretch_end_time"] = format_time(stretch_start + datetime.timedelta(minutes=10))
+    stretch_start = wake_up_time + datetime.timedelta(minutes=30)
+    schedule["stretch_start_time"] = format_time(stretch_start)
+    schedule["stretch_end_time"] = format_time(stretch_start + datetime.timedelta(minutes=10))
 
-        current_time = work_start_time
-        work_blocks = []
-        break_blocks = []
-        reminders = []
+    current_time = work_start_time
+    work_blocks = []
+    break_blocks = []
 
-        while current_time < work_end_time:
-            work_end_block = min(current_time + datetime.timedelta(minutes=90), work_end_time)
-            work_blocks.append((current_time, work_end_block))
-            current_time = work_end_block
+    while current_time < work_end_time:
+        work_end_block = min(current_time + datetime.timedelta(minutes=90), work_end_time)
+        work_blocks.append((current_time, work_end_block))
+        current_time = work_end_block
 
-            if current_time < work_end_time:
-                break_end = current_time + datetime.timedelta(minutes=10)
-                break_blocks.append((current_time, break_end))
-                current_time = break_end
+        if current_time < work_end_time:
+            break_end = current_time + datetime.timedelta(minutes=10)
+            break_blocks.append((current_time, break_end))
+            current_time = break_end
 
-            # Add reminder intervals during work time
-            reminder_time = set_reminder(current_time, 30)
-            reminders.append(format_time(reminder_time))
+    schedule["work_blocks"] = [(format_time(start), format_time(end)) for start, end in work_blocks]
+    schedule["break_blocks"] = [(format_time(start), format_time(end)) for start, end in break_blocks]
 
-        schedule["work_blocks"] = [(format_time(start), format_time(end)) for start, end in work_blocks]
-        schedule["break_blocks"] = [(format_time(start), format_time(end)) for start, end in break_blocks]
-        schedule["reminders"] = reminders
+    return schedule
 
-        return schedule
+def input_recommended_schedule():
+    """Generate and save a recommended schedule with priorities."""
+    schedule = load_schedule()
+    priority_schedule = load_priority_schedule()
 
-    except ValueError as e:
-        messagebox.showerror("Error", str(e))
-        return None
+    if not schedule:
+        messagebox.showerror("Error", "No manual schedule found. Please create one first.")
+        return
 
+    for day, day_schedule in schedule.items():
+        wake_up = day_schedule.get("wake_up_time")
+        work_start = day_schedule.get("work_start_time")
+        work_end = day_schedule.get("work_end_time")
+
+        if not all([wake_up, work_start, work_end]):
+            messagebox.showwarning("Incomplete Data", f"Missing data for {day}. Skipping.")
+            continue
+
+        recommended_schedule = generate_recommended_schedule(wake_up, work_start, work_end)
+        
+        if day not in priority_schedule:
+            priority_schedule[day] = {}
+
+        for task, time in recommended_schedule.items():
+            if task not in priority_schedule[day]:
+                priority_schedule[day][task] = {
+                    "time": time,
+                    "priority": "High" if task == "wake_up_time" else "Low"
+                }
+
+        save_recommended_schedule(priority_schedule)
+        messagebox.showinfo("Saved", f"Recommended schedule for {day} saved successfully!")
 
 def view_recommended_schedule():
     """View the recommended schedule with priorities."""
     priority_schedule = load_priority_schedule()
 
     if not priority_schedule:
-        messagebox.showinfo("No Schedule", "No priority schedule found. Please generate one first.")
+        messagebox.showinfo("No Schedule", "No recommended schedule found. Please generate one first.")
         return
 
-    # Create a new window to display the schedule
     view_window = tk.Toplevel()
     view_window.title("Recommended Schedule with Priorities")
     view_window.geometry("600x400")
@@ -146,120 +148,76 @@ def view_recommended_schedule():
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
-    # Display tasks with priorities
     for day, tasks in priority_schedule.items():
         tk.Label(scrollable_frame, text=day, font=("Arial", 14, "bold"), pady=5).pack(anchor="w")
-        
-        if isinstance(tasks, dict):
-            for task, details in tasks.items():
-                if isinstance(details, dict):
-                    priority = details.get("priority", "Low").strip().lower()
-                    time = details.get("time", "N/A")
 
-                    # Set the color based on the priority
-                    if priority == "high":
-                        color = "red"
-                    elif priority == "low":
-                        color = "green"
-                    else:
-                        color = "black"
-
-                    tk.Label(
-                        scrollable_frame,
-                        text=f"{task}: {time} (Priority: {priority.capitalize()})",
-                        font=("Arial", 12),
-                        fg=color
-                    ).pack(anchor="w", padx=20)
-                else:
-                    tk.Label(
-                        scrollable_frame,
-                        text=f"{task}: {details}",
-                        font=("Arial", 12),
-                        fg="green"
-                    ).pack(anchor="w", padx=20)
-
-
-
-def input_recommended_schedule():
-    """Generate a recommended schedule for a specific day and assign priorities."""
-    root = tk.Tk()
-    root.withdraw()
-
-    # Load both the manual schedule and the priority schedule
-    schedule = load_schedule()
-    if not schedule:
-        messagebox.showerror("Error", "No schedule found. Please create a schedule first.")
-        return
-
-    priority_schedule = load_priority_schedule()
-    if not priority_schedule:
-        messagebox.showerror("Error", "No priority schedule found. Please assign priorities first.")
-        return
-
-    days = list(schedule.keys())
-
-    while True:
-        choice = simpledialog.askstring(
-            "Select Day",
-            "Choose a day to generate the recommended schedule:\n" +
-            "\n".join(f"{i+1}. {day}" for i, day in enumerate(days)) +
-            "\n0. Exit"
-        )
-
-        if choice and choice.isdigit():
-            choice = int(choice)
-            if choice == 0:
-                break
-            if 1 <= choice <= len(days):
-                day = days[choice - 1]
-                day_schedule = schedule.get(day, {})
-
-                # Ask for the times of the selected day
-                wake_up = simpledialog.askstring("Wake-Up Time", f"Enter wake-up time for {day} (HH:MM):")
-                work_start = simpledialog.askstring("Work Start Time", f"Enter work start time for {day} (HH:MM):")
-                work_end = simpledialog.askstring("Work End Time", f"Enter work end time for {day} (HH:MM):")
-
-                # Check if all fields were filled
-                if not all([wake_up, work_start, work_end]):
-                    messagebox.showerror(
-                        "Incomplete Data",
-                        f"Wake-up time, work start time, and work end time must be set for {day}. Please try again."
-                    )
-                    continue
-
-                # Update the schedule with the new times
-                day_schedule["wake_up_time"] = wake_up
-                day_schedule["work_start_time"] = work_start
-                day_schedule["work_end_time"] = work_end
-
-                # Generate the recommended schedule
-                recommended_schedule = generate_recommended_schedule(wake_up, work_start, work_end)
-
-                if recommended_schedule:
-    # Save the updated recommended schedule
-                    save_recommended_schedule(recommended_schedule, day)
-
-                if day not in priority_schedule:
-                     priority_schedule[day] = {}
-
-                for task, time in recommended_schedule.items():
-                     if task not in priority_schedule[day]:
-                        priority_schedule[day][task] = {
-                            "time": time,
-                            "priority": "High" if task == "wake_up_time" else "Low"
-            }
-
-                save_choice = messagebox.askyesno("Save Schedule", f"Do you want to save the updated schedule for {day}?")
-                if save_choice:
-                    save_priority_schedule(priority_schedule)
-                    messagebox.showinfo("Saved", f"Schedule with priorities for {day} saved successfully!")
-
+        for task, details in tasks.items():
+            if isinstance(details, str):  # Direct priority string (e.g., "High" or "Low")
+                priority = details.strip().lower()
+                time = "N/A"
+            elif isinstance(details, dict):  # Nested dictionary with priority and time
+                priority = details.get("priority", "Low").strip().lower()
+                time = details.get("time", "N/A")
             else:
-                messagebox.showwarning("Invalid Choice", "Please select a valid day or exit.")
-        else:
-            messagebox.showwarning("Invalid Input", "Please enter a valid option.")
+                priority = "low"  # Default to "Low" for unexpected cases
+                time = "N/A"
+
+        # Determine the color based on priority
+            color = "red" if priority == "high" else "green"
+
+        # Display the task
+            tk.Label(
+                scrollable_frame,
+                text=f"{task}: {time} (Priority: {priority.capitalize()})",
+                font=("Arial", 12),
+             fg=color
+        ).  pack(anchor="w", padx=20)
+
+def format_task_time(task, value):
+    """Format task time if applicable and return display values."""
+    try:
+        # Check if the task is one of the time-related keys
+        if task in ["wake_up_time", "work_start_time", "work_end_time"]:
+            # Attempt to parse the value as time
+            time_obj = datetime.datetime.strptime(value, "%H:%M")
+            formatted_time = time_obj.strftime("%I:%M %p")  # Convert to 12-hour format with AM/PM
+            return formatted_time, "High"  # Default priority to High for these tasks
+    except (ValueError, TypeError):
+        pass  # If parsing fails, continue with the default behavior
+
+    # Return the original value and default priority for non-time-related tasks
+    return value, "Low" if isinstance(value, str) else None
 
 
+    for day, tasks in priority_schedule.items():
+        tk.Label(scrollable_frame, text=day, font=("Arial", 14, "bold"), pady=5).pack(anchor="w")
+
+        for task, details in tasks.items():
+            # Handle time formatting for specific keys
+            if isinstance(details, str):  # Direct priority string (e.g., "High" or "Low")
+                if task in ["wake_up_time", "work_start_time", "work_end_time"]:
+                    formatted_time, priority = format_task_time(task, details)
+                    time = formatted_time
+                else:
+                    priority = details.strip().lower()
+                    time = "N/A"
+            elif isinstance(details, dict):  # Nested dictionary with priority and time
+                time = details.get("time", "N/A")
+                priority = details.get("priority", "Low").strip().lower()
+            else:
+                priority = "low"  # Default to "Low" for unexpected cases
+                time = "N/A"
+
+        # Determine the color based on priority
+            color = "red" if priority == "high" else "green"
+
+        # Display the task
+            tk.Label(
+                scrollable_frame,
+                text=f"{task.replace('_', ' ').capitalize()}: {time} (Priority: {priority.capitalize()})",
+                font=("Arial", 12),
+                fg=color
+            ).pack(anchor="w", padx=20)
 def main():
     """Main function to manage the recommended schedule with priorities."""
     root = tk.Tk()
@@ -280,7 +238,6 @@ def main():
             break
         else:
             messagebox.showwarning("Invalid Choice", "Please select a valid option.")
-
 
 if __name__ == "__main__":
     main()
