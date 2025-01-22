@@ -20,8 +20,10 @@ def load_recommended_schedule():
     try:
         with open(RECOMMENDED_SCHEDULE_FILE, "r") as file:
             return json.load(file)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Return an empty dictionary if the file is missing or invalid
         return {}
+
 
 def load_priority_schedule():
     """Load the priority schedule from the JSON file."""
@@ -89,6 +91,7 @@ def input_recommended_schedule():
     """Generate and save a recommended schedule with priorities."""
     schedule = load_schedule()
     priority_schedule = load_priority_schedule()
+    recommended_schedule = load_recommended_schedule()
 
     if not schedule:
         messagebox.showerror("Error", "No manual schedule found. Please create one first.")
@@ -103,26 +106,47 @@ def input_recommended_schedule():
             messagebox.showwarning("Incomplete Data", f"Missing data for {day}. Skipping.")
             continue
 
-        recommended_schedule = generate_recommended_schedule(wake_up, work_start, work_end)
-        
-        if day not in priority_schedule:
-            priority_schedule[day] = {}
+        # Generate the base recommended schedule
+        try:
+            generated_schedule = generate_recommended_schedule(wake_up, work_start, work_end)
+        except ValueError as e:
+            messagebox.showerror("Invalid Time Configuration", str(e))
+            continue
 
-        for task, time in recommended_schedule.items():
-            if task not in priority_schedule[day]:
-                priority_schedule[day][task] = {
+        if day not in recommended_schedule:
+            recommended_schedule[day] = {}
+
+        for task, time in generated_schedule.items():
+            # Handle high/low priority logic
+            if day in priority_schedule and task in priority_schedule[day]:
+                task_data = priority_schedule[day][task]
+                if isinstance(task_data, dict):  # Check if task_data is a dictionary
+                    priority = task_data.get("priority", "Low").strip().lower()
+                else:
+                    priority = task_data.strip().lower()  # If it's not a dictionary, treat it as a string
+            else:
+                priority = "low"
+
+            # If high priority, keep the original time from the schedule JSON
+            if priority == "high":
+                recommended_schedule[day][task] = {
+                    "time": day_schedule.get(task, time),
+                    "priority": "High"
+                }
+            else:  # Low priority: use generated time
+                recommended_schedule[day][task] = {
                     "time": time,
-                    "priority": "High" if task == "wake_up_time" else "Low"
+                    "priority": "Low"
                 }
 
-        save_recommended_schedule(priority_schedule)
-        messagebox.showinfo("Saved", f"Recommended schedule for {day} saved successfully!")
+    save_recommended_schedule(recommended_schedule)
+    messagebox.showinfo("Saved", "Recommended schedule saved successfully!")
 
 def view_recommended_schedule():
     """View the recommended schedule with priorities."""
-    priority_schedule = load_priority_schedule()
+    recommended_schedule = load_recommended_schedule()
 
-    if not priority_schedule:
+    if not recommended_schedule:
         messagebox.showinfo("No Schedule", "No recommended schedule found. Please generate one first.")
         return
 
@@ -148,30 +172,28 @@ def view_recommended_schedule():
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
-    for day, tasks in priority_schedule.items():
+    for day, tasks in recommended_schedule.items():
         tk.Label(scrollable_frame, text=day, font=("Arial", 14, "bold"), pady=5).pack(anchor="w")
 
         for task, details in tasks.items():
-            if isinstance(details, str):  # Direct priority string (e.g., "High" or "Low")
-                priority = details.strip().lower()
-                time = "N/A"
-            elif isinstance(details, dict):  # Nested dictionary with priority and time
-                priority = details.get("priority", "Low").strip().lower()
+            if isinstance(details, dict):  # Ensure it's a dictionary with time and priority
                 time = details.get("time", "N/A")
+                priority = details.get("priority", "Low").strip().lower()
             else:
-                priority = "low"  # Default to "Low" for unexpected cases
-                time = "N/A"
+                time = details
+                priority = "low"
 
-        # Determine the color based on priority
+            # Determine the color based on priority
             color = "red" if priority == "high" else "green"
 
-        # Display the task
+            # Display the task
             tk.Label(
                 scrollable_frame,
-                text=f"{task}: {time} (Priority: {priority.capitalize()})",
+                text=f"{task.replace('_', ' ').capitalize()}: {time} (Priority: {priority.capitalize()})",
                 font=("Arial", 12),
-             fg=color
-        ).  pack(anchor="w", padx=20)
+                fg=color
+            ).pack(anchor="w", padx=20)
+
 
 def format_task_time(task, value):
     """Format task time if applicable and return display values."""

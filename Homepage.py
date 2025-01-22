@@ -7,9 +7,11 @@ SCHEDULE_FILE = "schedule.json"
 PRIORITY_FILE = "priority_schedule.json"
 
 # Import your existing functions
+from Program_Olahraga import view_recommended_schedule
 from View_Schedule import view_schedule
 from Edit_Schedule import input_schedule
 from Schedule_Priority import input_priority_schedule, view_priority_schedule
+from Information import create_exercise_info_app
 
 def load_schedule():
     """Load the schedule from a JSON file."""
@@ -79,24 +81,27 @@ def create_homepage():
     button_frame = tk.Frame(root, bg=bg_color)
     button_frame.pack(pady=20)
 
-    def open_view_schedule():
-        view_schedule()
+    def open_view_recommended_schedule():
+        view_recommended_schedule()
 
     def open_edit_schedule():
         input_schedule()
+        view_schedule()
 
     def open_set_priority():
         input_priority_schedule()
-
-    def open_view_priority():
         view_priority_schedule()
+
+    def open_Information():
+        create_exercise_info_app()
+        
 
     # Buttons
     buttons = [
-        ("Schedule", open_view_schedule),
+        ("Schedule", open_view_recommended_schedule),
         ("Edit Schedule", open_edit_schedule),
         ("Set Priority", open_set_priority),
-        ("View Priority", open_view_priority),
+        ("Information", open_Information),
     ]
 
     for text, command in buttons:

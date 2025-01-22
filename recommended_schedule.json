@@ -1,16 +1,20 @@
 {
     "Monday": {
-        "wake_up_time": "High",
-        "stretch_start_time": "Low",
-        "stretch_end_time": "Low",
-        "work_start_time": "High",
-        "work_end_time": "High",
-        "move_notification_interval": "Low",
-        "moving_time": "Low",
-        "break_time": "Low",
+        "wake_up_time": {
+            "time": "07:00",
+            "priority": "High"
+        },
         "morning_routine": {
             "time": "07:30",
             "priority": "Low"
+        },
+        "stretch_start_time": {
+            "time": "07:10",
+            "priority": "High"
+        },
+        "stretch_end_time": {
+            "time": "07:20",
+            "priority": "High"
         },
         "work_blocks": {
             "time": [
@@ -49,28 +53,23 @@
                 ]
             ],
             "priority": "Low"
-        },
-        "reminders": {
-            "time": [
-                "10:10",
-                "11:50",
-                "13:30",
-                "14:30"
-            ],
-            "priority": "Low"
         }
     },
     "Tuesday": {
-        "wake_up_time": "High",
-        "stretch_start_time": "Low",
-        "stretch_end_time": "Low",
-        "work_start_time": "High",
-        "work_end_time": "High",
-        "move_notification_interval": "High",
-        "moving_time": "Low",
-        "break_time": "Low",
+        "wake_up_time": {
+            "time": "07:45",
+            "priority": "Low"
+        },
         "morning_routine": {
             "time": "08:15",
+            "priority": "Low"
+        },
+        "stretch_start_time": {
+            "time": "08:15",
+            "priority": "Low"
+        },
+        "stretch_end_time": {
+            "time": "08:25",
             "priority": "Low"
         },
         "work_blocks": {
@@ -108,15 +107,6 @@
                     "13:50",
                     "14:00"
                 ]
-            ],
-            "priority": "Low"
-        },
-        "reminders": {
-            "time": [
-                "11:10",
-                "12:50",
-                "14:30",
-                "15:30"
             ],
             "priority": "Low"
         }
